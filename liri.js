@@ -11,11 +11,28 @@ var spotify = new Spotify(keys.spotify);
 
 
 //Global variables
-var userCommand = process.argv[2].toLowerCase().trim();
+var initialUserCommand = process.argv[2];
+var userCommand = formatInput(initialUserCommand);
 var userSearch = process.argv.slice(3, process.argv.length).join("+");
 
 
 
+//This function checks to see if the user entered any input for the command.  If not, it assigns the value 
+//of this variable to "default" which will ultimately be passed to the commandInput function (which will
+//tell the user to enter a proper command).
+function formatInput(command){
+
+    if(command === undefined || command.length < 3){
+        return "default";
+    }
+
+    else{
+        return command.toLowerCase().trim();
+    }
+}
+
+
+//This is the main function for processing the input.  It calls other functions depending on the input.
 function commandInput(command, search) {
 
     switch (command) {
@@ -58,8 +75,8 @@ function commandInput(command, search) {
 }
 
 
-
-
+//This function submits a request of the user's movie input to the OMDB api.  The result is formatted into
+//an object and passed to the printOutput function. 
 function requestOMDB(search) {
 
     axios.get("http://www.omdbapi.com/?t=" + search + "&y=&plot=short&apikey=trilogy").then(
@@ -84,22 +101,9 @@ function requestOMDB(search) {
 }
 
 
-
-function printOutput(outputObject) {
-
-    console.log("\n---------------------------------------------------------------------------------------");
-
-    for (var prop in outputObject) {
-        if (typeof outputObject[prop] !== 'function') {
-            console.log(prop.replace("_", " ") + ": " + outputObject[prop]);
-        }
-    }
-
-    console.log("---------------------------------------------------------------------------------------\n");
-}
-
-
-
+//This function submits a request of the user's artist input to the bandsintown api.  This api returns 
+//concert data for the selected artist.  This function formats this data into an object and passes it 
+//to the printOutput function.
 function concertThis(artist) {
 
     axios.get("https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp").then(
@@ -126,6 +130,10 @@ function concertThis(artist) {
 
 }
 
+
+//This function submits a request of the user's song input to the spotify api.  This api returns 
+//data for the selected song.  It formats the data into a function and passes it to the printOutput
+//function.
 function spotifyThis(songName) {
 
     spotify.search({type: 'track', query: songName}, function(err, data){
@@ -146,6 +154,8 @@ function spotifyThis(songName) {
 }
 
 
+//This function reads the random.txt file and executes the command with the corresponding search value
+//from the text file.
 function doWhatItSays() {
 
     fs.readFile("random.txt", "utf8", function(error, data){
@@ -156,11 +166,26 @@ function doWhatItSays() {
 
         var dataArr = data.split(",");
         var command = dataArr[0];
-        var song = dataArr[1];
+        var search = dataArr[1];
 
-        commandInput(command, song);
+        commandInput(command, search);
         
     })
+}
+
+
+//This function takes in an object and prints it's properties and keys to the console.
+function printOutput(outputObject) {
+
+    console.log("\n---------------------------------------------------------------------------------------");
+
+    for (var prop in outputObject) {
+        if (typeof outputObject[prop] !== 'function') {
+            console.log(prop.replace("_", " ") + ": " + outputObject[prop]);
+        }
+    }
+
+    console.log("---------------------------------------------------------------------------------------\n");
 }
 
 commandInput(userCommand, userSearch);
